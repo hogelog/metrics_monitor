@@ -1,0 +1,14 @@
+{
+  "name": "visualizer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "NODE_ENV=production parcel build source/index.html --out-dir dist/",
+    "serve": "NODE_ENV=development parcel serve source/index.html --out-dir dist/"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4"
+  }
+}
