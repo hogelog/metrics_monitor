@@ -9,14 +9,14 @@ module MetricsMonitor
   class Error < StandardError; end
   class CollectorError < Error; end
 
-  DEFAULT_HOST = "0.0.0.0"
+  DEFAULT_BIND = "0.0.0.0"
   DEFAULT_PORT = 8686
 
-  Config = Struct.new(:host, :port, :collector, keyword_init: true)
+  Config = Struct.new(:bind, :port, :collector, keyword_init: true)
 
   class << self
     def configure
-      MetricsMonitor.config = Config.new(host: DEFAULT_HOST, port: DEFAULT_PORT)
+      MetricsMonitor.config = Config.new(bind: DEFAULT_BIND, port: DEFAULT_PORT)
       yield(MetricsMonitor.config) if block_given?
       MetricsMonitor.config.collector ||= BasicCollector.new
 

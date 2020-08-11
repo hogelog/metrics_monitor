@@ -3,6 +3,9 @@ require "webrick"
 
 module MetricsMonitor
   class Agent
+
+    HEADER_ALLOW_ORIGIN = "Access-Control-Allow-Origin"
+
     def initialize
       @config = MetricsMonitor.config
       @collector = @config.collector
@@ -14,11 +17,15 @@ module MetricsMonitor
           Port: @config.port,
       })
       @server.mount_proc("/") do |req, res|
-        res.body = "ok"
+        response_text(res, "ok")
       end
       @server.mount_proc("/metrics") do |req, res|
         metrics = @collector.collect
-        res.body = JSON.generate(metrics)
+        response_text(res, JSON.generate(metrics))
+      end
+      @server.mount_proc("/metrics/meta") do |req, res|
+        meta = @collector.meta
+        response_text(res, JSON.generate(meta))
       end
 
       @thread = Thread.new do
@@ -33,6 +40,13 @@ module MetricsMonitor
           @thread.join
         end
       end
+    end
+
+    private
+
+    def response_text(res, text)
+      res.header["Access-Control-Allow-Origin"] = "*"
+      res.body = text
     end
   end
 end
