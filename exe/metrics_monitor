@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+require "optparse"
+require "webrick"
+
+opts = {}
+parser = OptionParser.new
+parser.on("-p [PORT]", "--port", "Port") {|v| opts[:port] = v }
+parser.on("-b [BIND]", "--bind", "Bind host") {|v| opts[:bind] = v }
+parser.parse(ARGV)
+
+port = opts[:port] || ENV["PORT"] || 8080
+bind = opts[:bind] || ENV["BIND"] || "localhost"
+
+gem_dir = File.join(File.expand_path("..", __FILE__), "..")
+Dir.chdir(gem_dir) do
+  server = WEBrick::HTTPServer.new(DocumentRoot: './visualizer/dist/', BindAddress: bind, Port: port)
+  trap("INT"){ server.shutdown }
+  server.start
+end

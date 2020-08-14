@@ -79,7 +79,6 @@ function App(props: { chartFormats: any[]; debug: any; }) {
 
     return (
         <div id="app">
-            <h1 className={ Classes.HEADING }>Metrics Visualizer</h1>
             { charts }
 
             <Card style={ {display: displayDebug } }>

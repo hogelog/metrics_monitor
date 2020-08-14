@@ -13,7 +13,7 @@ module MetricsMonitor
       @logger = Rails.logger
 
       @server = WEBrick::HTTPServer.new({
-          BindAddress: @config.host,
+          BindAddress: @config.bind,
           Port: @config.port,
       })
       @server.mount_proc("/") do |req, res|
@@ -29,7 +29,7 @@ module MetricsMonitor
       end
 
       @thread = Thread.new do
-        @logger.info "Start MetricsMonitor::Agent #{@config.host}:#{@config.port}"
+        @logger.info "Start MetricsMonitor::Agent #{@config.bind}:#{@config.port}"
         @server.start
       end
 
