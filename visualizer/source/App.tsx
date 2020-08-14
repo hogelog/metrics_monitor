@@ -5,12 +5,10 @@ import { Card, Classes } from "@blueprintjs/core";
 
 import Plot from 'react-plotly.js';
 
-import "./App.scss";
-
 const HOST = process.env.NODE_ENV === "development" ? "http://localhost:8080" : "";
 const INTERVAL = 5000;
 
-function App(props: { chartFormats: any[]; debug: any; }) {
+function App(props: { monitorTitle: string, chartFormats: any[]; debug: any; }) {
     const initData: { [key: string]: (number | Date)[] } = { date: [] as Date[] };
     props.chartFormats.forEach((format) => {
         initData[format.key] = [];
@@ -79,6 +77,7 @@ function App(props: { chartFormats: any[]; debug: any; }) {
 
     return (
         <div id="app">
+            <h2 className={ Classes.HEADING}>{props.monitorTitle}</h2>
             { charts }
 
             <Card style={ {display: displayDebug } }>

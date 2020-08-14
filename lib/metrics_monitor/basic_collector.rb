@@ -12,6 +12,7 @@ module MetricsMonitor
 
     def meta
       {
+        title: "Basic Collector",
         chart_formats: [
           { key: :process, title: "Process", type: :line },
           { key: :cpu, title: "CPU", type: :area },
