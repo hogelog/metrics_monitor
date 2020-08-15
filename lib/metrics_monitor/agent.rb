@@ -10,7 +10,7 @@ module MetricsMonitor
       @config = MetricsMonitor.config
       @collector = @config.collector
 
-      @logger = Rails.logger
+      @logger = @config.logger
 
       @server = WEBrick::HTTPServer.new({
           BindAddress: @config.bind,

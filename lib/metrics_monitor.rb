@@ -1,3 +1,5 @@
+require "logger"
+
 require "metrics_monitor/version"
 
 require "metrics_monitor/collector_base"
@@ -12,13 +14,14 @@ module MetricsMonitor
   DEFAULT_BIND = "0.0.0.0"
   DEFAULT_PORT = 8686
 
-  Config = Struct.new(:bind, :port, :collector, keyword_init: true)
+  Config = Struct.new(:bind, :port, :collector, :logger, keyword_init: true)
 
   class << self
     def configure
       MetricsMonitor.config = Config.new(bind: DEFAULT_BIND, port: DEFAULT_PORT)
       yield(MetricsMonitor.config) if block_given?
       MetricsMonitor.config.collector ||= BasicCollector.new
+      MetricsMonitor.config.logger ||= Logger.new(STDOUT)
 
       MetricsMonitor.agent = MetricsMonitor::Agent.new
     end
