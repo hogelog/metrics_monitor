@@ -18,8 +18,8 @@ module MetricsMonitor
       })
 
       @server.mount_proc("/", self.method(:root))
-      @server.mount_proc("/metrics", self.method(:metrics))
-      @server.mount_proc("/metrics/meta", self.method(:metrics_meta))
+      @server.mount_proc("/monitor", self.method(:monitor))
+      @server.mount_proc("/monitor/meta", self.method(:monitor_meta))
     end
 
     def start
@@ -39,12 +39,12 @@ module MetricsMonitor
       response_text(res, "ok")
     end
 
-    def metrics(_req, res)
+    def monitor(_req, res)
       metrics = @collector.collect
       response_text(res, JSON.generate(metrics))
     end
 
-    def metrics_meta(_req, res)
+    def monitor_meta(_req, res)
       meta = @collector.meta
       response_text(res, JSON.generate(meta))
     end

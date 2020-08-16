@@ -5,10 +5,9 @@ import { Card, Classes } from "@blueprintjs/core";
 
 import Plot from 'react-plotly.js';
 
-const HOST = process.env.NODE_ENV === "development" ? "http://localhost:8080" : "";
 const INTERVAL = 5000;
 
-function App(props: { monitorTitle: string, chartFormats: any[]; debug: any; }) {
+function App(props: { monitorHost: string, monitorTitle: string, chartFormats: any[]; debug: any; }) {
     const initData: { [key: string]: (number | Date)[] } = { date: [] as Date[] };
     props.chartFormats.forEach((format) => {
         initData[format.key] = [];
@@ -24,7 +23,7 @@ function App(props: { monitorTitle: string, chartFormats: any[]; debug: any; }) 
             return;
         }
         let newIntervalId = window.setInterval(()=>{
-            fetch("http://localhost:8686/metrics", {
+            fetch(`${props.monitorHost}/monitor`, {
                 mode: "cors",
             }).then(res => {
                 return res.json();
