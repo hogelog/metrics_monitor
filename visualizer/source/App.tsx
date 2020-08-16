@@ -19,6 +19,14 @@ function App(props: { monitorHost: string; debug: any; }) {
     const [chartFormats, setChartFormats] = useState([] as { key: string, title: string, type: string}[]);
 
     const plot = (format: { key: string, title: string, type: string }) => {
+        let fill : "tozeroy" | "none";
+        switch (format.type) {
+            case "area":
+                fill = "tozeroy";
+                break;
+            default:
+                fill = "none";
+        }
         return (
             <Plot
                 key={format.key}
@@ -27,7 +35,7 @@ function App(props: { monitorHost: string; debug: any; }) {
                     y: data[format["key"]],
                     type: "scatter",
                     mode: "lines+markers",
-                    fill: 'tozeroy',
+                    fill: fill,
                 }]}
                 layout={{
                     width: 400,
