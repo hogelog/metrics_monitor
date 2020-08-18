@@ -2,8 +2,7 @@ require "logger"
 
 require "metrics_monitor/version"
 
-require "metrics_monitor/collector_base"
-require "metrics_monitor/basic_collector"
+require "metrics_monitor/collector"
 
 require "metrics_monitor/agent"
 require "metrics_monitor/server"
@@ -21,7 +20,7 @@ module MetricsMonitor
     def configure(start_agent: true)
       MetricsMonitor.config = Config.new(bind: DEFAULT_BIND, port: DEFAULT_PORT)
       yield(MetricsMonitor.config) if block_given?
-      MetricsMonitor.config.collector ||= BasicCollector.new
+      MetricsMonitor.config.collector ||= Collector::BasicCollector.new
       MetricsMonitor.config.logger ||= Logger.new(STDOUT, level: Logger::INFO)
 
       MetricsMonitor.agent = MetricsMonitor::Agent.new if start_agent

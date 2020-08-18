@@ -1,5 +1,5 @@
-RSpec.describe MetricsMonitor::BasicCollector do
-  let(:collector) { MetricsMonitor::BasicCollector.new }
+RSpec.describe MetricsMonitor::Collector::BasicCollector do
+  let(:collector) { MetricsMonitor::Collector::BasicCollector.new }
 
   it "#meta" do
     expect(collector.meta[:chart_formats]).to be_kind_of(Array)
