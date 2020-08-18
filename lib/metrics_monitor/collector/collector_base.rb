@@ -1,14 +1,16 @@
 module MetricsMonitor
   module Collector
     class CollectorBase
-      def collect
-        data = calculate
+      def key
+        @key ||= self.class.name.split("::")[-1]
+      end
+
+      def fetch_meta_data
+        meta_data.merge(key: key)
+      end
+
+      def fetch_data
         { ts: Time.now.to_f, data: data }
-      rescue => e
-        {
-            error: e.to_s,
-            backtrace: e&.backtrace
-        }
       end
     end
   end

@@ -1,19 +1,21 @@
+require "cgi"
 require "json"
 require "webrick"
 
 module MetricsMonitor
   class Server
+    attr_reader :running
+
     def initialize
       @config = MetricsMonitor.config
-      @collector = @config.collector
-      @logger = @config.logger
+      @monitor = MetricsMonitor.monitor
 
       @running = false
 
       @server = WEBrick::HTTPServer.new({
         BindAddress: @config.bind,
         Port: @config.port,
-        Logger: @logger,
+        Logger: MetricsMonitor.logger,
         StartCallback: lambda { @running = true },
       })
 
@@ -23,15 +25,12 @@ module MetricsMonitor
     end
 
     def start
-      @logger.info "Start MetricsMonitor::Agent #{@config.bind}:#{@config.port}"
+      MetricsMonitor.logger.info "Start MetricsMonitor::Server #{@config.bind}:#{@config.port}"
       @server.start
-
-      # Wait until start webrick
-      until @running
-      end
     end
 
     def shutdown
+      @running = false
       @server.shutdown
     end
 
@@ -39,14 +38,15 @@ module MetricsMonitor
       response_text(res, "ok")
     end
 
-    def monitor(_req, res)
-      metrics = @collector.collect
-      response_text(res, JSON.generate(metrics))
+    def monitor(req, res)
+      args = parse_query(req)
+      data = @monitor.fetch_all_data(args)
+      response_text(res, JSON.generate(data))
     end
 
     def monitor_meta(_req, res)
-      meta = @collector.meta
-      response_text(res, JSON.generate(meta))
+      meta_data = @monitor.fetch_meta_data
+      response_text(res, JSON.generate(meta_data))
     end
 
     private
@@ -54,6 +54,16 @@ module MetricsMonitor
     def response_text(res, text)
       res.header["Access-Control-Allow-Origin"] = "*"
       res.body = text
+    end
+
+    def parse_query(req)
+      return {} unless req.query_string
+      query = CGI.parse(req.query_string)
+      args = {}
+      query.each do |key, val|
+        args[key] = val[0]
+      end
+      args
     end
   end
 end
