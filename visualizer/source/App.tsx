@@ -7,48 +7,96 @@ import Plot from 'react-plotly.js';
 
 const INTERVAL = 5000;
 
-function App(props: { monitorHost: string; debug: any; }) {
-    const initData: { [key: string]: (number | Date)[] } = { date: [] as Date[] };
-    const [intervalId, setIntervalId] = useState(0);
-    const [data, setData] = useState(initData);
-    const [log, setLog] = useState("");
-    const [displayDebug] = useState(props.debug ? "block" : "none");
-    const [dataRevision, setDataRevision] = useState(0);
+interface ChartData {
+    [pid: string]: {
+        [key: string]: (number | Date)[]
+    }
+}
 
-    const [monitorTitle, setMonitorTitle] = useState("");
-    const [chartFormats, setChartFormats] = useState([] as { key: string, title: string, type: string}[]);
+interface ChartMetaData {
+    title: string;
+    chart_formats: ChartFormat[];
+}
 
-    const plot = (format: { key: string, title: string, type: string }) => {
-        let fill : "tozeroy" | "none";
-        switch (format.type) {
-            case "area":
-                fill = "tozeroy";
-                break;
-            default:
-                fill = "none";
-        }
-        return (
-            <Plot
-                key={format.key}
-                data={[{
-                    x: data["date"],
-                    y: data[format["key"]],
-                    type: "scatter",
-                    mode: "lines+markers",
-                    fill: fill,
-                }]}
-                layout={{
-                    width: 400,
-                    height: 300,
-                    title: format["title"],
-                    yaxis: {
-                        zeroline: true,
-                    },
-                    datarevision: dataRevision,
-                }}
-            />
-        );
+interface ChartFormat {
+    key: string;
+    title: string;
+    type: string;
+}
+
+interface MonitorChartData {
+    ts: number;
+    data: {
+        [name: string]: number;
     };
+}
+
+interface MonitorData {
+    [pid: string]: {
+        [name: string]: MonitorChartData;
+    }
+}
+
+function formatData(format: ChartFormat, chartData: ChartData) {
+    let fill : "tozeroy" | "none";
+    switch (format.type) {
+        case "area":
+            fill = "tozeroy";
+            break;
+        default:
+            fill = "none";
+    }
+
+    let data = [] as Plotly.Data[];
+    Object.keys(chartData).forEach((pid) => {
+        let procData = chartData[pid];
+        data.push({
+            name: pid,
+            x: procData["date"],
+            y: procData[format.key],
+            type: "scatter",
+            mode: "lines+markers",
+            fill: fill,
+        });
+    });
+    return data;
+}
+
+function plot(chartName: string, format: ChartFormat, data: { [key: string]: ChartData }, dataRevision: number) {
+    return (
+        <Plot
+            key={ format.key }
+            data={ formatData(format, data[chartName]) }
+            layout={{
+                width: 400,
+                height: 300,
+                title: format["title"],
+                yaxis: {
+                    zeroline: true,
+                },
+                datarevision: dataRevision,
+            }}
+        />
+    );
+};
+
+function plotChart(chartName: string, chartMetaData: ChartMetaData, data: { [key: string]: ChartData }, dataRevision: number) {
+    return (
+        <div>
+            <h2 className={ Classes.HEADING}>{chartMetaData.title}</h2>
+            { chartMetaData.chart_formats.map((format) => plot(chartName, format, data, dataRevision)) }
+        </div>
+    );
+}
+
+function App(props: { monitorHost: string; debug: any; }) {
+    const [displayDebug] = useState(props.debug ? "block" : "none");
+    const [intervalId, setIntervalId] = useState(0);
+    const [log, setLog] = useState("");
+
+    const [metaData, setMetaData] = useState({} as { [key: string]: ChartMetaData });
+    const [data, setData] = useState({} as { [key: string]: ChartData });
+    const [dataRevision, setDataRevision] = useState(0);
 
     useEffect(() => {
         if (intervalId != 0) {
@@ -58,25 +106,41 @@ function App(props: { monitorHost: string; debug: any; }) {
             mode: "cors",
         }).then(res => {
             return res.json();
-        }).then((meta) => {
-            setMonitorTitle(meta.title);
-            setChartFormats(meta.chart_formats);
-            chartFormats.forEach((format) => {
-                data[format.key] = [];
+        }).then((metaData_) => {
+            let metaData = metaData_ as { [key: string]: ChartMetaData };
+            Object.keys(metaData).forEach((chartName: string) => {
+                data[chartName] = {};
             });
+            setMetaData(metaData);
 
             let newIntervalId = window.setInterval(()=>{
                 fetch(`${props.monitorHost}/monitor`, {
                     mode: "cors",
                 }).then(res => {
                     return res.json();
-                }).then((metrics) => {
-                    data.date.push(new Date(metrics.ts * 1000));
-                    chartFormats.forEach((format) => {
-                        data[format.key].push( metrics.data[format.key]);
-                    });
+                }).then((monitorData_) => {
+                    let monitorData = monitorData_ as MonitorData;
+                    console.log(monitorData);
+                    Object.keys(monitorData).forEach((pid) => {
+                        let procMonitorData = monitorData[pid];
+                        Object.keys(procMonitorData).forEach((chartName) => {
+                            let monitorChartData = procMonitorData[chartName];
+                            let chartData = data[chartName];
+                            let procChartData = chartData[pid] = chartData[pid] || {};
+                            console.log([chartName, chartData, procChartData]);
+                            procChartData["date"] = procChartData["date"] || [];
+                            procChartData["date"].push(new Date(monitorChartData.ts * 1000));
 
-                    setDataRevision(metrics.ts);
+                            Object.keys(monitorChartData.data).forEach((metricsName: string) => {
+                                procChartData[metricsName] = procChartData[metricsName] || [];
+                                procChartData[metricsName].push(monitorChartData.data[metricsName]);
+                            });
+                        });
+                    });
+                    console.log(data);
+
+                    setData(data);
+                    setDataRevision(new Date().getTime());
                     if (props.debug) {
                         setLog(JSON.stringify(data));
                     }
@@ -93,13 +157,12 @@ function App(props: { monitorHost: string; debug: any; }) {
         };
     });
 
-    if (chartFormats.length == 0) {
+    if (!metaData || Object.keys(metaData).length == 0) {
         return <Spinner size={ Spinner.SIZE_LARGE } />;
     } 
     return (
         <div id="app">
-            <h2 className={ Classes.HEADING}>{monitorTitle}</h2>
-            { chartFormats.map((format) => plot(format)) }
+            { Object.keys(metaData).map((chartName) => plotChart(chartName, metaData[chartName], data, dataRevision)) }
 
             <Card style={ {display: displayDebug } }>
                 <h3>Debug log</h3>
@@ -110,4 +173,3 @@ function App(props: { monitorHost: string; debug: any; }) {
 }
 
 export default App;
-

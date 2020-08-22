@@ -1,5 +1,5 @@
 module MetricsMonitor
-  class Agent
+  class ServerWorker
     def initialize
       @server = Server.new
 
@@ -9,6 +9,10 @@ module MetricsMonitor
 
       at_exit do
         stop
+      end
+
+      # Wait until start webrick
+      until @server.running
       end
     end
 
