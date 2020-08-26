@@ -6,11 +6,11 @@ module MetricsMonitor
       def meta_data
         {
             title: "GC Stat",
-            chart_formats: [
-                { key: :heap_live_slots, title: "Heap live slots", type: :area },
-                { key: :heap_free_slots, title: "Heap free slots", type: :area },
-                { key: :total_allocated_objects, title: "Total allocated objects", type: :line },
-                { key: :total_freed_objects, title: "Total freed objects", type: :line },
+            monitors: [
+                { key: :heap_live_slots, title: "Heap live slots", type: :chart, mode: :area },
+                { key: :heap_free_slots, title: "Heap free slots", type: :chart, mode: :area },
+                { key: :total_allocated_objects, title: "Total allocated objects", type: :chart, mode: :line },
+                { key: :total_freed_objects, title: "Total freed objects", type: :chart, mode: :line },
             ],
         }
       end
