@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 
-import { Card, Classes, Spinner } from "@blueprintjs/core";
+import { Card, Classes, Spinner, Tab } from "@blueprintjs/core";
+import { Table, Column, Cell } from "@blueprintjs/table";
 
 import Plot from 'react-plotly.js';
 
@@ -15,13 +16,14 @@ interface ChartData {
 
 interface ChartMetaData {
     title: string;
-    chart_formats: ChartFormat[];
+    monitors: MonitorFormat[];
 }
 
-interface ChartFormat {
+interface MonitorFormat {
     key: string;
     title: string;
-    type: string;
+    type: "chart" | "table";
+    mode: "line" | "area";
 }
 
 interface MonitorChartData {
@@ -37,9 +39,9 @@ interface MonitorData {
     }
 }
 
-function formatData(format: ChartFormat, chartData: ChartData) {
+function formatChartData(format: MonitorFormat, chartData: ChartData) {
     let fill : "tozeroy" | "none";
-    switch (format.type) {
+    switch (format.mode) {
         case "area":
             fill = "tozeroy";
             break;
@@ -62,11 +64,32 @@ function formatData(format: ChartFormat, chartData: ChartData) {
     return data;
 }
 
-function plot(chartName: string, format: ChartFormat, data: { [key: string]: ChartData }, dataRevision: number) {
+function tableCellRenderer(key: string, collectorData: ChartData) {
+    return (rowIndex: number) => {
+        let pids = Object.keys(collectorData);
+        let pid = pids[rowIndex];
+        let targetData = collectorData[pid][key];
+        return <Cell>{ targetData[targetData.length - 1] }</Cell>;
+    };
+}
+
+function drawTable(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
+    let keys = format.key.split(",");
+    let collectorData = data[collectorName];
+    let pids = Object.keys(collectorData);
+
+    return (
+        <Table numRows={Object.keys(collectorData).length}>
+            { keys.map((key) => <Column name={key} cellRenderer={tableCellRenderer(key, collectorData)} />) }
+        </Table>
+    );
+}
+
+function drawChart(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }, dataRevision: number) {
     return (
         <Plot
             key={ format.key }
-            data={ formatData(format, data[chartName]) }
+            data={ formatChartData(format, data[collectorName]) }
             layout={{
                 width: 400,
                 height: 300,
@@ -78,13 +101,22 @@ function plot(chartName: string, format: ChartFormat, data: { [key: string]: Cha
             }}
         />
     );
-};
+}
 
-function plotChart(chartName: string, chartMetaData: ChartMetaData, data: { [key: string]: ChartData }, dataRevision: number) {
+function drawMonitor(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }, dataRevision: number) {
+    switch (format.type) {
+        case "table":
+            return drawTable(collectorName, format, data);
+        case "chart":
+            return drawChart(collectorName, format, data, dataRevision);
+    }
+}
+
+function drawCollector(collectorName: string, chartMetaData: ChartMetaData, data: { [key: string]: ChartData }, dataRevision: number) {
     return (
         <div>
             <h2 className={ Classes.HEADING}>{chartMetaData.title}</h2>
-            { chartMetaData.chart_formats.map((format) => plot(chartName, format, data, dataRevision)) }
+            { chartMetaData.monitors.map((format) => drawMonitor(collectorName, format, data, dataRevision)) }
         </div>
     );
 }
@@ -120,7 +152,6 @@ function App(props: { monitorHost: string; debug: any; }) {
                     return res.json();
                 }).then((monitorData_) => {
                     let monitorData = monitorData_ as MonitorData;
-                    console.log(monitorData);
                     Object.keys(monitorData).forEach((pid) => {
                         let procMonitorData = monitorData[pid];
                         Object.keys(procMonitorData).forEach((chartName) => {
@@ -162,7 +193,7 @@ function App(props: { monitorHost: string; debug: any; }) {
     } 
     return (
         <div id="app">
-            { Object.keys(metaData).map((chartName) => plotChart(chartName, metaData[chartName], data, dataRevision)) }
+            { Object.keys(metaData).map((collectorName) => drawCollector(collectorName, metaData[collectorName], data, dataRevision)) }
 
             <Card style={ {display: displayDebug } }>
                 <h3>Debug log</h3>
