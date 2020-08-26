@@ -17,6 +17,7 @@ interface ChartData {
 interface ChartMetaData {
     title: string;
     monitors: MonitorFormat[];
+    data: DataFormat[];
 }
 
 interface MonitorFormat {
@@ -24,6 +25,12 @@ interface MonitorFormat {
     title: string;
     type: "chart" | "table";
     mode: "line" | "area";
+}
+
+interface DataFormat {
+    [name: string]: {
+        mode: "overwrite" | "append";
+    };
 }
 
 interface MonitorChartData {
@@ -69,14 +76,17 @@ function tableCellRenderer(key: string, collectorData: ChartData) {
         let pids = Object.keys(collectorData);
         let pid = pids[rowIndex];
         let targetData = collectorData[pid][key];
-        return <Cell>{ targetData[targetData.length - 1] }</Cell>;
+        if (Array.isArray(targetData)) {
+            return <Cell>{ targetData[targetData.length - 1] }</Cell>;
+        } else {
+            return <Cell>{ targetData }</Cell>;
+        }
     };
 }
 
 function drawTable(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
     let keys = format.key.split(",");
     let collectorData = data[collectorName];
-    let pids = Object.keys(collectorData);
 
     return (
         <Table numRows={Object.keys(collectorData).length}>
@@ -158,17 +168,21 @@ function App(props: { monitorHost: string; debug: any; }) {
                             let monitorChartData = procMonitorData[chartName];
                             let chartData = data[chartName];
                             let procChartData = chartData[pid] = chartData[pid] || {};
-                            console.log([chartName, chartData, procChartData]);
                             procChartData["date"] = procChartData["date"] || [];
                             procChartData["date"].push(new Date(monitorChartData.ts * 1000));
 
+                            let collectorDataFormats = metaData[chartName].data;
                             Object.keys(monitorChartData.data).forEach((metricsName: string) => {
-                                procChartData[metricsName] = procChartData[metricsName] || [];
-                                procChartData[metricsName].push(monitorChartData.data[metricsName]);
+                                let metricsFormat = collectorDataFormats[metricsName];
+                                if (metricsFormat.mode == "overwrite") {
+                                    procChartData[metricsName] = monitorChartData.data[metricsName];
+                                } else {
+                                    procChartData[metricsName] = procChartData[metricsName] || [];
+                                    procChartData[metricsName].push(monitorChartData.data[metricsName]);
+                                }
                             });
                         });
                     });
-                    console.log(data);
 
                     setData(data);
                     setDataRevision(new Date().getTime());

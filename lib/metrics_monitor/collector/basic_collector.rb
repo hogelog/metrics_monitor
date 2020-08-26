@@ -16,6 +16,14 @@ module MetricsMonitor
             { key: :rss, title: "RSS", type: :chart, mode: :area },
             { key: :vsz, title: "VSZ", type: :chart, mode: :area },
           ],
+          data: {
+            pid: { mode: "overwrite" },
+            command: { mode: "overwrite" },
+            cpu: { mode: "append" },
+            mem: { mode: "append" },
+            rss: { mode: "append" },
+            vsz: { mode: "append" },
+          },
         }
       end
 
