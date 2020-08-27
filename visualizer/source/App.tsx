@@ -23,7 +23,7 @@ interface ChartMetaData {
 interface MonitorFormat {
     key: string;
     title: string;
-    type: "chart" | "table";
+    type: "chart" | "table" | "text";
     mode: "line" | "area";
 }
 
@@ -44,6 +44,57 @@ interface MonitorData {
     [pid: string]: {
         [name: string]: MonitorChartData;
     }
+}
+
+function drawText(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
+    let collectorData = data[collectorName];
+    let pids = Object.keys(collectorData);
+
+    let texts = [] as any;
+    pids.forEach((pid : string) => {
+        let targetData = collectorData[pid][format.key];
+        texts.push(
+            <div>
+                <h4>{ pid }</h4>
+                <pre className={Classes.CODE_BLOCK}>
+                    { targetData }
+                </pre>
+            </div>
+        );
+    });
+    return (
+        <div>
+            <h3>{ format.title } </h3>
+            { texts }
+        </div>
+    );
+}
+
+function tableCellRenderer(key: string, collectorData: ChartData) {
+    return (rowIndex: number) => {
+        let pids = Object.keys(collectorData);
+        let pid = pids[rowIndex];
+        let targetData = collectorData[pid][key];
+        if (Array.isArray(targetData)) {
+            return <Cell>{ targetData[targetData.length - 1] }</Cell>;
+        } else {
+            return <Cell>{ targetData }</Cell>;
+        }
+    };
+}
+
+function drawTable(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
+    let keys = format.key.split(",");
+    let collectorData = data[collectorName];
+
+    return (
+        <div>
+            <h3>{ format.title } </h3>
+            <Table numRows={Object.keys(collectorData).length}>
+                { keys.map((key) => <Column name={key} cellRenderer={tableCellRenderer(key, collectorData)} />) }
+            </Table>
+        </div>
+    );
 }
 
 function formatChartData(format: MonitorFormat, chartData: ChartData) {
@@ -71,30 +122,6 @@ function formatChartData(format: MonitorFormat, chartData: ChartData) {
     return data;
 }
 
-function tableCellRenderer(key: string, collectorData: ChartData) {
-    return (rowIndex: number) => {
-        let pids = Object.keys(collectorData);
-        let pid = pids[rowIndex];
-        let targetData = collectorData[pid][key];
-        if (Array.isArray(targetData)) {
-            return <Cell>{ targetData[targetData.length - 1] }</Cell>;
-        } else {
-            return <Cell>{ targetData }</Cell>;
-        }
-    };
-}
-
-function drawTable(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
-    let keys = format.key.split(",");
-    let collectorData = data[collectorName];
-
-    return (
-        <Table numRows={Object.keys(collectorData).length}>
-            { keys.map((key) => <Column name={key} cellRenderer={tableCellRenderer(key, collectorData)} />) }
-        </Table>
-    );
-}
-
 function drawChart(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }, dataRevision: number) {
     return (
         <Plot
@@ -115,6 +142,8 @@ function drawChart(collectorName: string, format: MonitorFormat, data: { [key: s
 
 function drawMonitor(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }, dataRevision: number) {
     switch (format.type) {
+        case "text":
+            return drawText(collectorName, format, data);
         case "table":
             return drawTable(collectorName, format, data);
         case "chart":

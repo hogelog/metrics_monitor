@@ -1,7 +1,12 @@
 require_relative "../../lib/metrics_monitor"
 
 MetricsMonitor.configure do |config|
+  MetricsMonitor::Collector::Memprof2Collector.configure do |options|
+    options[:trace] = /config\.ru/
+  end
+
   config.collectors << MetricsMonitor::Collector::GcStatCollector
+  config.collectors << MetricsMonitor::Collector::Memprof2Collector
 end
 
 class RackApp

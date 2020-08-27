@@ -10,7 +10,7 @@ module MetricsMonitor
         {
           title: "Basic",
           monitors: [
-            { key: "pid,command,cpu,mem,rss,vsz", title: "CPU", type: :table },
+            { key: "pid,command,cpu,mem,rss,vsz", title: "Processes", type: :table },
             { key: :cpu, title: "CPU", type: :chart, mode: :area },
             { key: :mem, title: "MEM", type: :chart, mode: :area },
             { key: :rss, title: "RSS", type: :chart, mode: :area },
