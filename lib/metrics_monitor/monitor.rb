@@ -24,9 +24,13 @@ module MetricsMonitor
     end
 
     def fetch_all_data(args)
-      all_data = {
-        Process.pid => fetch_data(args),
-      }
+      if MetricsMonitor.config.exclude_main_process
+        all_data = {}
+      else
+        all_data = {
+          Process.pid => fetch_data(args),
+        }
+      end
       all_data.merge(fetch_data_from_children(args))
     end
 
@@ -79,6 +83,8 @@ module MetricsMonitor
     end
 
     def fetch_data_from_children(args)
+      return {} if @dispatch_writers.size == 0
+
       @dispatch_writers.each do |dispatch_writer|
         dispatch_writer.puts(JSON.fast_generate(args))
       end

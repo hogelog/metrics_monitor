@@ -14,11 +14,11 @@ module MetricsMonitor
   DEFAULT_BIND = "0.0.0.0"
   DEFAULT_PORT = 8686
 
-  Config = Struct.new(:bind, :port, :collectors, :logger, :procs, keyword_init: true)
+  Config = Struct.new(:bind, :port, :collectors, :logger, :procs, :exclude_main_process, keyword_init: true)
 
   class << self
     def configure(start_server: true)
-      @config = Config.new(bind: DEFAULT_BIND, port: DEFAULT_PORT)
+      @config = Config.new(bind: DEFAULT_BIND, port: DEFAULT_PORT, exclude_main_process: false)
       @config.collectors = [
         Collector::BasicCollector,
       ]

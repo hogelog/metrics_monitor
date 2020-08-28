@@ -7,6 +7,8 @@ MetricsMonitor.configure do |config|
 
   config.collectors << MetricsMonitor::Collector::GcStatCollector
   config.collectors << MetricsMonitor::Collector::Memprof2Collector
+
+  config.exclude_main_process = true
 end
 
 class RackApp
