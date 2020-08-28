@@ -1,11 +1,20 @@
 begin
   require "memprof2"
-ensure LoadError
+rescue LoadError
 end
 
 module MetricsMonitor
   module Collector
     class Memprof2Collector < CollectorBase
+      def self.default_options
+        { enabled: false }
+      end
+
+      def initialize
+        ::Memprof2 # raise error without memprof2 dependency
+        super
+      end
+
       def meta_data
         {
           title: "Memory profile",

@@ -1,173 +1,23 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
+import * as queryString from 'query-string';
 
-import { Card, Classes, Spinner, Tab } from "@blueprintjs/core";
-import { Table, Column, Cell } from "@blueprintjs/table";
+import { Card, Spinner } from "@blueprintjs/core";
 
-import Plot from 'react-plotly.js';
+import Collector from './Collector';
 
 const INTERVAL = 5000;
 
-interface ChartData {
-    [pid: string]: {
-        [key: string]: (number | Date)[]
-    }
-}
-
-interface ChartMetaData {
-    title: string;
-    monitors: MonitorFormat[];
-    data: DataFormat[];
-}
-
-interface MonitorFormat {
-    key: string;
-    title: string;
-    type: "chart" | "table" | "text";
-    mode: "line" | "area";
-}
-
-interface DataFormat {
-    [name: string]: {
-        mode: "overwrite" | "append";
-    };
-}
-
-interface MonitorChartData {
-    ts: number;
-    data: {
-        [name: string]: number;
-    };
-}
-
-interface MonitorData {
-    [pid: string]: {
-        [name: string]: MonitorChartData;
-    }
-}
-
-function drawText(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
-    let collectorData = data[collectorName];
-    let pids = Object.keys(collectorData);
-
-    let texts = [] as any;
-    pids.forEach((pid : string) => {
-        let targetData = collectorData[pid][format.key];
-        texts.push(
-            <div>
-                <h4>{ pid }</h4>
-                <pre className={Classes.CODE_BLOCK}>
-                    { targetData }
-                </pre>
-            </div>
-        );
-    });
-    return (
-        <div>
-            <h3>{ format.title } </h3>
-            { texts }
-        </div>
-    );
-}
-
-function tableCellRenderer(key: string, collectorData: ChartData) {
-    return (rowIndex: number) => {
-        let pids = Object.keys(collectorData);
-        let pid = pids[rowIndex];
-        let targetData = collectorData[pid][key];
-        if (Array.isArray(targetData)) {
-            return <Cell>{ targetData[targetData.length - 1] }</Cell>;
-        } else {
-            return <Cell>{ targetData }</Cell>;
-        }
-    };
-}
-
-function drawTable(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }) {
-    let keys = format.key.split(",");
-    let collectorData = data[collectorName];
-
-    return (
-        <div>
-            <h3>{ format.title } </h3>
-            <Table numRows={Object.keys(collectorData).length}>
-                { keys.map((key) => <Column name={key} cellRenderer={tableCellRenderer(key, collectorData)} />) }
-            </Table>
-        </div>
-    );
-}
-
-function formatChartData(format: MonitorFormat, chartData: ChartData) {
-    let fill : "tozeroy" | "none";
-    switch (format.mode) {
-        case "area":
-            fill = "tozeroy";
-            break;
-        default:
-            fill = "none";
-    }
-
-    let data = [] as Plotly.Data[];
-    Object.keys(chartData).forEach((pid) => {
-        let procData = chartData[pid];
-        data.push({
-            name: pid,
-            x: procData["date"],
-            y: procData[format.key],
-            type: "scatter",
-            mode: "lines+markers",
-            fill: fill,
-        });
-    });
-    return data;
-}
-
-function drawChart(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }, dataRevision: number) {
-    return (
-        <Plot
-            key={ format.key }
-            data={ formatChartData(format, data[collectorName]) }
-            layout={{
-                width: 400,
-                height: 300,
-                title: format["title"],
-                yaxis: {
-                    zeroline: true,
-                },
-                datarevision: dataRevision,
-            }}
-        />
-    );
-}
-
-function drawMonitor(collectorName: string, format: MonitorFormat, data: { [key: string]: ChartData }, dataRevision: number) {
-    switch (format.type) {
-        case "text":
-            return drawText(collectorName, format, data);
-        case "table":
-            return drawTable(collectorName, format, data);
-        case "chart":
-            return drawChart(collectorName, format, data, dataRevision);
-    }
-}
-
-function drawCollector(collectorName: string, chartMetaData: ChartMetaData, data: { [key: string]: ChartData }, dataRevision: number) {
-    return (
-        <div>
-            <h2 className={ Classes.HEADING}>{chartMetaData.title}</h2>
-            { chartMetaData.monitors.map((format) => drawMonitor(collectorName, format, data, dataRevision)) }
-        </div>
-    );
-}
-
-function App(props: { monitorHost: string; debug: any; }) {
+function App(props: { monitorHost: string, debug: boolean }) {
     const [displayDebug] = useState(props.debug ? "block" : "none");
     const [intervalId, setIntervalId] = useState(0);
     const [log, setLog] = useState("");
 
-    const [metaData, setMetaData] = useState({} as { [key: string]: ChartMetaData });
-    const [data, setData] = useState({} as { [key: string]: ChartData });
+    const [metaData, setMetaData] = useState({} as { [key: string]: CollectorMetaData });
+    const [data, setData] = useState({} as { [key: string]: CollectorData });
     const [dataRevision, setDataRevision] = useState(0);
+
+    const [monitorOptions, setMonitorOptions] = useState({} as MonitorOptions);
 
     useEffect(() => {
         if (intervalId != 0) {
@@ -178,14 +28,21 @@ function App(props: { monitorHost: string; debug: any; }) {
         }).then(res => {
             return res.json();
         }).then((metaData_) => {
-            let metaData = metaData_ as { [key: string]: ChartMetaData };
-            Object.keys(metaData).forEach((chartName: string) => {
-                data[chartName] = {};
+            let metaData = metaData_ as { [key: string]: CollectorMetaData };
+            Object.keys(metaData).forEach((collectorName: string) => {
+                data[collectorName] = {};
+                monitorOptions[collectorName] = metaData[collectorName].options;
             });
             setMetaData(metaData);
+            setMonitorOptions(monitorOptions);
 
             let newIntervalId = window.setInterval(()=>{
-                fetch(`${props.monitorHost}/monitor`, {
+                let queryOptions = {} as { [name: string]: string };
+                Object.keys(monitorOptions).forEach((collectorName) => {
+                    queryOptions[collectorName] = JSON.stringify({ enabled: monitorOptions[collectorName].enabled });
+                });
+                let query = queryString.stringify(queryOptions);
+                fetch(`${props.monitorHost}/monitor?${query}`, {
                     mode: "cors",
                 }).then(res => {
                     return res.json();
@@ -234,9 +91,16 @@ function App(props: { monitorHost: string; debug: any; }) {
     if (!metaData || Object.keys(metaData).length == 0) {
         return <Spinner size={ Spinner.SIZE_LARGE } />;
     } 
+    let collectors = Object.keys(metaData).map((collectorName, i) => {
+        let collectorOptions = monitorOptions[collectorName];
+        let collectorData = data[collectorName];
+        return (
+            <Collector key={`app-collector-${i}`} metaData={metaData[collectorName]} data={collectorData} dataRevision={dataRevision} options={collectorOptions} />
+        );
+    });
     return (
         <div id="app">
-            { Object.keys(metaData).map((collectorName) => drawCollector(collectorName, metaData[collectorName], data, dataRevision)) }
+            { collectors }
 
             <Card style={ {display: displayDebug } }>
                 <h3>Debug log</h3>

@@ -39,21 +39,26 @@ module MetricsMonitor
     end
 
     def monitor(req, res)
-      args = parse_query(req)
-      data = @monitor.fetch_all_data(args)
-      response_text(res, JSON.generate(data))
+      options = parse_query(req)
+      data = @monitor.fetch_all_data(options)
+      response_json(res, data)
     end
 
     def monitor_meta(_req, res)
       meta_data = @monitor.fetch_meta_data
-      response_text(res, JSON.generate(meta_data))
+      response_json(res, meta_data)
     end
 
     private
 
     def response_text(res, text)
-      res.header["Access-Control-Allow-Origin"] = "*"
+      res.header["access-control-allow-origin"] = "*"
       res.body = text
+    end
+
+    def response_json(res, data)
+      res.header["content-type"] = "application/json"
+      response_text(res, JSON.fast_generate(data))
     end
 
     def parse_query(req)
@@ -61,7 +66,7 @@ module MetricsMonitor
       query = CGI.parse(req.query_string)
       args = {}
       query.each do |key, val|
-        args[key] = val[0]
+        args[key] = JSON.parse(val[0])
       end
       args
     end
