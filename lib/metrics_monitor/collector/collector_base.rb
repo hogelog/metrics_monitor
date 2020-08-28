@@ -1,6 +1,16 @@
 module MetricsMonitor
   module Collector
     class CollectorBase
+      def self.configure
+        @options = {}.dup
+        yield(@options)
+        @options
+      end
+
+      def self.options
+        @options
+      end
+
       def key
         @key ||= self.class.name.split("::")[-1]
       end

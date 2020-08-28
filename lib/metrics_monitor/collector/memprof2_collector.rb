@@ -6,22 +6,6 @@ end
 module MetricsMonitor
   module Collector
     class Memprof2Collector < CollectorBase
-      DEFAULT_OPTIONS = {}.freeze
-
-      def self.configure
-        @options = DEFAULT_OPTIONS.dup
-        yield(@options)
-        @options
-      end
-
-      def self.options
-        @options
-      end
-
-      def initialize
-        super
-      end
-
       def meta_data
         {
           title: "Memory profile",
