@@ -6,6 +6,7 @@ MetricsMonitor.configure do |config|
   end
 
   config.collectors << MetricsMonitor::Collector::GcStatCollector
+  config.collectors << MetricsMonitor::Collector::ObjectStatCollector
   config.collectors << MetricsMonitor::Collector::Memprof2Collector
 
   config.exclude_main_process = true
