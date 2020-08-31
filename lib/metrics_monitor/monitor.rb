@@ -1,5 +1,7 @@
 require "metrics_monitor/monitor/unicorn"
 
+require "timeout"
+
 module MetricsMonitor
   class Monitor
     WAIT_LIMIT_DISPATCH_CHILD = 0.5

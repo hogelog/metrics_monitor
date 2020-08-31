@@ -1,5 +1,3 @@
-require "timeout"
-
 module MetricsMonitor
   module Collector
     class GcStatCollector < CollectorBase
