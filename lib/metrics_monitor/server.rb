@@ -17,6 +17,7 @@ module MetricsMonitor
         Port: @config.port,
         Logger: MetricsMonitor.logger,
         StartCallback: lambda { @running = true },
+        AccessLog: [],
       })
 
       @server.mount_proc("/", self.method(:root))
