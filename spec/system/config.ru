@@ -23,7 +23,7 @@ class RackApp
       10000.times{ @array << rand }
     end
 
-    [200, { 'Content-Type' => 'text/plain' }, ["hello"]]
+    [200, { 'content-type' => 'text/plain' }, ["hello"]]
   end
 end
 
