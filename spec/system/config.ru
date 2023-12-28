@@ -9,7 +9,7 @@ MetricsMonitor.configure do |config|
   config.collectors << MetricsMonitor::Collector::ObjectStatCollector
   config.collectors << MetricsMonitor::Collector::Memprof2Collector
 
-  config.exclude_main_process = true
+  config.exclude_main_process = true unless ENV["SINGLE_PROCESS"]
 end
 
 class RackApp
