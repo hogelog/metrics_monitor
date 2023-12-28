@@ -9,7 +9,7 @@ parser.on("-p [PORT]", "--port", "Port") {|v| opts[:port] = v }
 parser.on("-b [BIND]", "--bind", "Bind host") {|v| opts[:bind] = v }
 parser.parse(ARGV)
 
-port = opts[:port] || ENV["PORT"] || 8080
+port = opts[:port] || ENV["PORT"] || 8687
 bind = opts[:bind] || ENV["BIND"] || "localhost"
 
 gem_dir = File.join(File.expand_path("..", __FILE__), "..")
