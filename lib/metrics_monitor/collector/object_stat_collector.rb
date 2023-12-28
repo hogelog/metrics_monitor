@@ -21,7 +21,7 @@ module MetricsMonitor
           next unless klass.name
           size = ObjectSpace.memsize_of_all(klass)
           next if size == 0
-          stat = [klass.name, size]
+          stat << [klass.name, size]
         end
         stat.sort_by!{|_name, size| -size }
 
