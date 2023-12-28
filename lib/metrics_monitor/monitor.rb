@@ -6,6 +6,10 @@ module MetricsMonitor
   class Monitor
     WAIT_LIMIT_DISPATCH_CHILD = 0.5
 
+    def self.worker_processes
+      return MetricsMonitor::Monitor::Unicorn.worker_processes if MetricsMonitor::Monitor::Unicorn.config
+    end
+
     def initialize(collector_classes, procs: nil)
       @parent_pid = Process.pid
 
@@ -17,7 +21,7 @@ module MetricsMonitor
 
       @result_reader, @result_writer = IO.pipe
 
-      procs ||= MetricsMonitor::Monitor::Unicorn.worker_processes
+      procs ||= self.class.worker_processes
       @dispatch_readers = []
       @dispatch_writers = []
       procs.to_i.times do |i|
