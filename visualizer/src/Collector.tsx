@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { Classes, Switch } from "@blueprintjs/core";
 import { Table, Column, Cell } from "@blueprintjs/table";
@@ -16,7 +16,7 @@ function TextMonitor(props: { format: MonitorFormat, data: CollectorData}) {
             <div>
                 <h4>{ pid }</h4>
                 <pre className={Classes.CODE_BLOCK}>
-                    { targetData }
+                    { String(targetData) }
                 </pre>
             </div>
         );
@@ -35,7 +35,7 @@ function tableCellRenderer(key: string, data: CollectorData) {
         let pid = pids[rowIndex];
         let targetData = data[pid][key];
         if (Array.isArray(targetData)) {
-            return <Cell>{ targetData[targetData.length - 1] }</Cell>;
+            return <Cell>{ String(targetData[targetData.length - 1]) }</Cell>;
         } else {
             return <Cell>{ targetData }</Cell>;
         }

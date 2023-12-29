@@ -1,8 +1,7 @@
-import * as React from 'react';
 import { useState, useEffect } from 'react';
 import queryString from 'query-string';
 
-import { Card, Spinner } from "@blueprintjs/core";
+import { Card, Spinner, SpinnerSize } from "@blueprintjs/core";
 
 import Collector from './Collector';
 
@@ -53,18 +52,19 @@ function App(props: { monitorHost: string, debug: boolean }) {
                         Object.keys(procMonitorData).forEach((chartName) => {
                             let monitorChartData = procMonitorData[chartName];
                             let chartData = data[chartName];
-                            let procChartData = chartData[pid] = chartData[pid] || {};
+                            let procChartData: { [p: string]: ((number | Date)[] | (number | Date)) } = chartData[pid] = chartData[pid] || {};
                             procChartData["date"] = procChartData["date"] || [];
-                            procChartData["date"].push(new Date(monitorChartData.ts * 1000));
+                            (procChartData["date"] as (number | Date)[]).push(new Date(monitorChartData.ts * 1000));
 
-                            let collectorDataFormats = metaData[chartName].data;
+                            let collectorDataFormats: DataFormat[] = metaData[chartName].data;
                             Object.keys(monitorChartData.data).forEach((metricsName: string) => {
+                                // @ts-ignore
                                 let metricsFormat = collectorDataFormats[metricsName];
                                 if (metricsFormat.mode == "overwrite") {
                                     procChartData[metricsName] = monitorChartData.data[metricsName];
                                 } else {
                                     procChartData[metricsName] = procChartData[metricsName] || [];
-                                    procChartData[metricsName].push(monitorChartData.data[metricsName]);
+                                    (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
                                 }
                             });
                         });
@@ -89,8 +89,8 @@ function App(props: { monitorHost: string, debug: boolean }) {
     });
 
     if (!metaData || Object.keys(metaData).length == 0) {
-        return <Spinner size={ Spinner.SIZE_LARGE } />;
-    } 
+        return <Spinner size={ SpinnerSize.LARGE } />;
+    }
     let collectors = Object.keys(metaData).map((collectorName, i) => {
         let collectorOptions = monitorOptions[collectorName];
         let collectorData = data[collectorName];
