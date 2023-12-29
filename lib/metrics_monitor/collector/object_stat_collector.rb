@@ -3,6 +3,11 @@ require "objspace"
 module MetricsMonitor
   module Collector
     class ObjectStatCollector < CollectorBase
+
+      def self.default_options
+        { enabled: false }
+      end
+
       def meta_data
         {
           title: "Object Stat",
@@ -18,6 +23,8 @@ module MetricsMonitor
       def data
         stat = []
         ObjectSpace.each_object(Class).each do |klass|
+          next unless klass.respond_to?(:name)
+          next unless klass.method(:name).parameters.empty?
           next unless klass.name
           size = ObjectSpace.memsize_of_all(klass)
           next if size == 0
