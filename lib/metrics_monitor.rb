@@ -3,6 +3,7 @@ require "logger"
 require "metrics_monitor/version"
 
 require "metrics_monitor/collector"
+require "metrics_monitor/dispatcher"
 require "metrics_monitor/monitor"
 require "metrics_monitor/server"
 require "metrics_monitor/server_worker"

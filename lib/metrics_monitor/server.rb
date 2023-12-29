@@ -18,11 +18,12 @@ module MetricsMonitor
         Logger: MetricsMonitor.logger,
         StartCallback: lambda { @running = true },
         AccessLog: [],
+        MaxClients: 10,
       })
 
       @server.mount_proc("/", self.method(:root))
       @server.mount_proc("/monitor", self.method(:monitor))
-      @server.mount_proc("/monitor/meta", self.method(:monitor_meta))
+      @server.mount_proc("/meta", self.method(:meta))
     end
 
     def start
@@ -41,11 +42,12 @@ module MetricsMonitor
 
     def monitor(req, res)
       options = parse_query(req)
-      data = @monitor.fetch_all_data(options)
+      collector = req.path.sub(%r{^/monitor/}, "").to_sym
+      data = @monitor.fetch_all_data(options.merge(collector:))
       response_json(res, data)
     end
 
-    def monitor_meta(_req, res)
+    def meta(_req, res)
       meta_data = @monitor.fetch_meta_data
       response_json(res, meta_data)
     end

@@ -30,6 +30,7 @@ interface MonitorChartData {
     data: {
         [name: string]: number;
     };
+    error?: string;
 }
 
 interface MonitorData {
@@ -40,6 +41,7 @@ interface MonitorData {
 
 interface CollectorOptions {
     enabled: boolean;
+    timeout: number;
     [key: string]: any;
 }
 

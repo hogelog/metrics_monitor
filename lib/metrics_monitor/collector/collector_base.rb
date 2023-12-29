@@ -13,7 +13,7 @@ module MetricsMonitor
       end
 
       def self.default_options
-        { enabled: true }
+        { enabled: true, timeout: 2000 }
       end
 
       def initialize

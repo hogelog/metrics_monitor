@@ -1,4 +1,5 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
+
 import queryString from 'query-string';
 
 import App from "./App";
@@ -10,7 +11,5 @@ const query = queryString.parse(location.search);
 const debug = !!query.debug;
 const monitorHost = (query.monitor_host || "http://localhost:8686") as string;
 
-ReactDOM.render(
-    <App monitorHost={monitorHost} debug={debug} />,
-    document.getElementById("root"),
-);
+const root = createRoot(document.getElementById("root"));
+root.render(<App monitorHost={monitorHost} debug={debug} />);

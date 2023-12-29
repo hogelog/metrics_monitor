@@ -1,10 +1,14 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { Classes, Switch } from "@blueprintjs/core";
+import { Card, Classes, Switch } from "@blueprintjs/core";
 import { Table, Column, Cell } from "@blueprintjs/table";
 
 import Plot from 'react-plotly.js';
+
+import queryString from 'query-string';
+
+const INTERVAL = 5000;
 
 function TextMonitor(props: { format: MonitorFormat, data: CollectorData}) {
     let pids = Object.keys(props.data);
@@ -13,7 +17,7 @@ function TextMonitor(props: { format: MonitorFormat, data: CollectorData}) {
     pids.forEach((pid : string) => {
         let targetData = props.data[pid][props.format.key];
         texts.push(
-            <div>
+            <div key={ pid }>
                 <h4>{ pid }</h4>
                 <pre className={Classes.CODE_BLOCK}>
                     { String(targetData) }
@@ -110,12 +114,68 @@ function Monitor(props: { format: MonitorFormat, data: CollectorData, dataRevisi
     }
 }
 
-function Collector(props: { metaData: CollectorMetaData; data: CollectorData; dataRevision: number, options: CollectorOptions;}) {
-  const [enabled, setEnabled] = useState(props.options.enabled);
-  
+function Collector(props: { collectorName: string; metaData: CollectorMetaData; options: CollectorOptions; monitorHost: string; debug: boolean; }) {
+    const [displayDebug] = useState(props.debug ? "block" : "none");
+    const [enabled, setEnabled] = useState(!!props.options.enabled);
+    const [data, setData] = useState({} as CollectorData);
+    const [dataRevision, setDataRevision] = useState(0);
+    const [log, setLog] = useState("");
+    let queryOptions = {};
+    Object.keys(props.options).forEach((key) => {
+        queryOptions[key] = JSON.stringify(props.options[key]);
+    });
+    let query = queryString.stringify(queryOptions);
+    let url = `${props.monitorHost}/monitor/${props.collectorName}?${query}`;
+
+    useEffect(() => {
+        let newIntervalId = window.setInterval(()=>{
+            if (!enabled) {
+                return;
+            }
+            fetch(url, {
+                mode: "cors",
+                signal: AbortSignal.timeout(Number(props.options.timeout)),
+            }).then(res => {
+                return res.json();
+            }).then((monitorData_) => {
+                let monitorData = monitorData_ as MonitorData;
+                Object.keys(monitorData).forEach((pid) => {
+                    let monitorChartData = monitorData[pid];
+                    if (monitorChartData.error) {
+                        return;
+                    }
+                    let procChartData: { [p: string]: ((number | Date)[] | (number | Date)) } = data[pid] = (data[pid] || {});
+                    procChartData["date"] = procChartData["date"] || [];
+                    (procChartData["date"] as (number | Date)[]).push(new Date(monitorChartData.ts * 1000));
+
+                    let collectorDataFormats: DataFormat[] = props.metaData.data;
+                    Object.keys(monitorChartData.data).forEach((metricsName: string) => {
+                        // @ts-ignore
+                        let metricsFormat = collectorDataFormats[metricsName];
+                        if (metricsFormat.mode == "overwrite") {
+                            procChartData[metricsName] = monitorChartData.data[metricsName];
+                        } else {
+                            procChartData[metricsName] = procChartData[metricsName] || [];
+                            (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
+                        }
+                    });
+                });
+
+                setData(data);
+                setDataRevision(new Date().getTime());
+                if (props.debug) {
+                    setLog(log + JSON.stringify(monitorData, null, 4));
+                }
+            });
+        }, INTERVAL);
+
+        return () => {
+            clearTimeout(newIntervalId);
+        };
+    }, [enabled]);
+
   let onSwitchChange = (_: React.FormEvent<HTMLInputElement>) => {
-    props.options.enabled = !props.options.enabled;
-    setEnabled(props.options.enabled);
+    setEnabled(!enabled);
   };
   return (
       <div>
@@ -123,7 +183,12 @@ function Collector(props: { metaData: CollectorMetaData; data: CollectorData; da
               {props.metaData.title}
               <Switch checked={ enabled } onChange={ onSwitchChange } />
           </h2>
-          { props.metaData.monitors.map((format, i) => <Monitor key={`collector-monitor-${i}`} format={format} data={props.data} dataRevision={props.dataRevision} />) }
+          { props.metaData.monitors.map((format, i) => <Monitor key={`collector-monitor-${i}`} format={format} data={data} dataRevision={dataRevision} />) }
+
+          <Card style={ {display: displayDebug } }>
+              <h3>Debug log</h3>
+              <pre>{log}</pre>
+          </Card>
       </div>
   );
 }
