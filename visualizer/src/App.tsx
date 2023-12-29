@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 
 import { Card, Spinner } from "@blueprintjs/core";
 

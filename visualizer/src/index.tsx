@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as queryString from 'query-string';
+import queryString from 'query-string';
 
 import App from "./App";
 
