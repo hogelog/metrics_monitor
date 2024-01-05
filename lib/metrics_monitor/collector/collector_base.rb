@@ -33,11 +33,10 @@ module MetricsMonitor
             sleep(options[:interval] / 1000.0)
           end
         end
-      end
 
-      def stop
-        @thread.kill
-        @thread = nil
+        at_exit do
+          @thread.kill
+        end
       end
 
       def fetch_metrics
