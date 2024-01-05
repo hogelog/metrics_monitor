@@ -122,6 +122,7 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
     const [log, setLog] = useState("");
     let queryOptions = {};
     Object.keys(props.options).forEach((key) => {
+        // @ts-ignore
         queryOptions[key] = JSON.stringify(props.options[key]);
     });
     let query = queryString.stringify(queryOptions);
@@ -146,6 +147,7 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
                     }
                     let procChartData: { [p: string]: ((number | Date)[] | (number | Date)) } = data[pid] = (data[pid] || {});
                     procChartData["date"] = procChartData["date"] || [];
+                    // @ts-ignore
                     (procChartData["date"] as (number | Date)[]).push(new Date(monitorChartData.ts * 1000));
 
                     let collectorDataFormats: DataFormat[] = props.metaData.data;
@@ -153,9 +155,11 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
                         // @ts-ignore
                         let metricsFormat = collectorDataFormats[metricsName];
                         if (metricsFormat.mode == "overwrite") {
+                            // @ts-ignore
                             procChartData[metricsName] = monitorChartData.data[metricsName];
                         } else {
                             procChartData[metricsName] = procChartData[metricsName] || [];
+                            // @ts-ignore
                             (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
                         }
                     });
