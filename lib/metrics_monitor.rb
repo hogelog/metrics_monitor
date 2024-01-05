@@ -46,5 +46,13 @@ module MetricsMonitor
     def server_worker
       @server_worker
     end
+
+    def gem_dir
+      @gem_dir ||= File.expand_path(File.join(File.expand_path("..", __FILE__), ".."))
+    end
+
+    def visualizer_dir
+      @visualizer_dir ||= File.expand_path(File.join(gem_dir, "visualizer", "dist"))
+    end
   end
 end

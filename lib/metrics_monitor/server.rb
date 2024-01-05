@@ -21,7 +21,8 @@ module MetricsMonitor
         MaxClients: 10,
       })
 
-      @server.mount_proc("/", self.method(:root))
+      @server.mount("/", WEBrick::HTTPServlet::FileHandler, MetricsMonitor.visualizer_dir)
+      @server.mount_proc("/healthcheck", self.method(:healthcheck))
       @server.mount_proc("/monitor", self.method(:monitor))
       @server.mount_proc("/meta", self.method(:meta))
     end
@@ -36,7 +37,7 @@ module MetricsMonitor
       @server.shutdown
     end
 
-    def root(_req, res)
+    def healthcheck(_req, res)
       response_text(res, "ok")
     end
 
