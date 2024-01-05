@@ -42,9 +42,8 @@ module MetricsMonitor
     end
 
     def monitor(req, res)
-      options = parse_query(req)
       collector = req.path.sub(%r{^/monitor/}, "").to_sym
-      metrics = @monitor.fetch_all_metrics(options.merge(collector:))
+      metrics = @monitor.fetch_all_metrics({ collector: })
       response_json(res, metrics)
     end
 
@@ -63,16 +62,6 @@ module MetricsMonitor
     def response_json(res, data)
       res.header["content-type"] = "application/json"
       response_text(res, JSON.fast_generate(data))
-    end
-
-    def parse_query(req)
-      return {} unless req.query_string
-      query = CGI.parse(req.query_string)
-      args = {}
-      query.each do |key, val|
-        args[key] = JSON.parse(val[0])
-      end
-      args
     end
   end
 end

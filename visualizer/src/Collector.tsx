@@ -121,13 +121,7 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
     const [data, setData] = useState({} as CollectorData);
     const [dataRevision, setDataRevision] = useState(0);
     const [log, setLog] = useState("");
-    let queryOptions = {};
-    Object.keys(props.options).forEach((key) => {
-        // @ts-ignore
-        queryOptions[key] = JSON.stringify(props.options[key]);
-    });
-    let query = queryString.stringify(queryOptions);
-    let url = `${props.monitorHost}/monitor/${props.collectorName}?${query}`;
+    let url = `${props.monitorHost}/monitor/${props.collectorName}`;
 
     useEffect(() => {
         let newIntervalId = window.setInterval(()=>{
