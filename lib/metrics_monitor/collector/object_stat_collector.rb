@@ -5,7 +5,7 @@ module MetricsMonitor
     class ObjectStatCollector < CollectorBase
 
       def self.default_options
-        { enabled: false, timeout: 30_000 }
+        { enabled: false, timeout: 120_000 }
       end
 
       def meta_data
