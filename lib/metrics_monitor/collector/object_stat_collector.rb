@@ -5,7 +5,7 @@ module MetricsMonitor
     class ObjectStatCollector < CollectorBase
 
       def self.default_options
-        { enabled: false, interval: 120_000 }
+        { enabled: true, interval: 120_000 }
       end
 
       def meta_data
