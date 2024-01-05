@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { Card, Spinner, SpinnerSize } from "@blueprintjs/core";
+import { Card, HotkeysProvider, Spinner, SpinnerSize } from "@blueprintjs/core";
 
 import Collector from './Collector';
 
@@ -36,14 +36,17 @@ function App(props: { monitorHost: string, debug: boolean }) {
         );
     });
     return (
-        <div id="app">
-            { collectors }
+        <HotkeysProvider>
+            <div id="app">
 
-            <Card style={{display: displayDebug}}>
-                <h3>Metadata</h3>
-                <pre>{JSON.stringify(metaData, null, 4)}</pre>
-            </Card>
-        </div>
+                { collectors }
+
+                <Card style={{display: displayDebug}}>
+                    <h3>Metadata</h3>
+                    <pre>{JSON.stringify(metaData, null, 4)}</pre>
+                </Card>
+            </div>
+        </HotkeysProvider>
     );
 }
 

@@ -2,11 +2,9 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 
 import { Card, Classes, Switch } from "@blueprintjs/core";
-import { Table, Column, Cell } from "@blueprintjs/table";
+import { Table2, Column, Cell } from "@blueprintjs/table";
 
 import Plot from 'react-plotly.js';
-
-import queryString from 'query-string';
 
 const TIMEOUT = 500;
 const INTERVAL = 10_000;
@@ -54,9 +52,9 @@ function TableMonitor(props: { format: MonitorFormat, data: CollectorData }) {
     return (
         <div>
             <h3>{ props.format.title } </h3>
-            <Table numRows={numRows}>
+            <Table2 numRows={numRows}>
                 { keys.map((key, i) => <Column key={`tablemonitor-table-${i}`} name={key} cellRenderer={tableCellRenderer(key, props.data)} />) }
-            </Table>
+            </Table2>
         </div>
     );
 }
