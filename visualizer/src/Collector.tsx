@@ -8,7 +8,8 @@ import Plot from 'react-plotly.js';
 
 import queryString from 'query-string';
 
-const INTERVAL = 5000;
+const TIMEOUT = 500;
+const INTERVAL = 10_000;
 
 function TextMonitor(props: { format: MonitorFormat, data: CollectorData}) {
     let pids = Object.keys(props.data);
@@ -135,33 +136,34 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
             }
             fetch(url, {
                 mode: "cors",
-                signal: AbortSignal.timeout(Number(props.options.timeout)),
+                signal: AbortSignal.timeout(TIMEOUT),
             }).then(res => {
                 return res.json();
             }).then((monitorData_) => {
                 let monitorData = monitorData_ as MonitorData;
                 Object.keys(monitorData).forEach((pid) => {
-                    let monitorChartData = monitorData[pid];
-                    if (monitorChartData.error) {
-                        return;
-                    }
-                    let procChartData: { [p: string]: ((number | Date)[] | (number | Date)) } = data[pid] = (data[pid] || {});
-                    procChartData["date"] = procChartData["date"] || [];
-                    // @ts-ignore
-                    (procChartData["date"] as (number | Date)[]).push(new Date(monitorChartData.ts * 1000));
-
-                    let collectorDataFormats: DataFormat[] = props.metaData.data;
-                    Object.keys(monitorChartData.data).forEach((metricsName: string) => {
-                        // @ts-ignore
-                        let metricsFormat = collectorDataFormats[metricsName];
-                        if (metricsFormat.mode == "overwrite") {
-                            // @ts-ignore
-                            procChartData[metricsName] = monitorChartData.data[metricsName];
-                        } else {
-                            procChartData[metricsName] = procChartData[metricsName] || [];
-                            // @ts-ignore
-                            (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
+                    monitorData[pid].forEach((monitorChartData) => {
+                        if (monitorChartData.error) {
+                            return;
                         }
+                        let procChartData: { [p: string]: ((number | Date)[] | (number | Date)) } = data[pid] = (data[pid] || {});
+                        procChartData["date"] = procChartData["date"] || [];
+                        // @ts-ignore
+                        (procChartData["date"] as (number | Date)[]).push(new Date(monitorChartData.ts * 1000));
+
+                        let collectorDataFormats: DataFormat[] = props.metaData.data;
+                        Object.keys(monitorChartData.data).forEach((metricsName: string) => {
+                            // @ts-ignore
+                            let metricsFormat = collectorDataFormats[metricsName];
+                            if (metricsFormat.mode == "overwrite") {
+                                // @ts-ignore
+                                procChartData[metricsName] = monitorChartData.data[metricsName];
+                            } else {
+                                procChartData[metricsName] = procChartData[metricsName] || [];
+                                // @ts-ignore
+                                (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
+                            }
+                        });
                     });
                 });
 

@@ -44,8 +44,8 @@ module MetricsMonitor
     def monitor(req, res)
       options = parse_query(req)
       collector = req.path.sub(%r{^/monitor/}, "").to_sym
-      data = @monitor.fetch_all_data(options.merge(collector:))
-      response_json(res, data)
+      metrics = @monitor.fetch_all_metrics(options.merge(collector:))
+      response_json(res, metrics)
     end
 
     def meta(_req, res)

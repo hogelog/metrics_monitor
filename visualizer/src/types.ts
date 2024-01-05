@@ -34,14 +34,11 @@ interface MonitorChartData {
 }
 
 interface MonitorData {
-    [pid: string]: {
-        [name: string]: MonitorChartData;
-    }
+    [pid: string]: MonitorChartData[];
 }
 
 interface CollectorOptions {
     enabled: boolean;
-    timeout: number;
     [key: string]: any;
 }
 

@@ -1,7 +1,5 @@
 require "metrics_monitor/monitor/unicorn"
 
-require "timeout"
-
 module MetricsMonitor
   class Monitor
     def self.worker_processes
@@ -22,6 +20,8 @@ module MetricsMonitor
       @procs = procs || self.class.worker_processes
 
       @dispatcher = Dispatcher.new(@procs.to_i) if @procs
+
+      start_collectors unless MetricsMonitor.config.exclude_main_process
     end
 
     def fetch_meta_data
@@ -33,11 +33,11 @@ module MetricsMonitor
       meta_data
     end
 
-    def fetch_all_data(options)
+    def fetch_all_metrics(options)
       if MetricsMonitor.config.exclude_main_process
         all_data = {}
       else
-        all_data = fetch_data(options)
+        all_data = fetch_metrics(options)
       end
       if @dispatcher
         @dispatcher.dispatch(options).each do |result|
@@ -48,30 +48,27 @@ module MetricsMonitor
     end
 
     def watch(proc_number)
+      start_collectors
       @dispatcher.receive(proc_number) do |options|
-        fetch_data(options)
+        fetch_metrics(options)
       end
     end
 
     private
 
-    def fetch_data(options)
+    def start_collectors
+      @collectors.each do |name, collector|
+        collector.start
+      end
+    end
+
+    def fetch_metrics(options)
       collector_name = options[:collector].to_sym
       collector = @collectors[collector_name]
       collector_options = options
       collector.options.merge!(collector_options) if collector_options
 
-      timeout = collector.options[:timeout] / 1000.0 / (1 + @procs.to_i)
-      Timeout.timeout(timeout) do
-        { Process.pid => collector.fetch_data }
-      end
-    rescue Timeout::Error => e
-      MetricsMonitor.logger.warn("#{options} timeout: #{e}")
-      {
-        Process.pid => {
-          error: e.to_s,
-        }
-      }
+      { Process.pid => collector.fetch_metrics }
     rescue => e
       MetricsMonitor.logger.error(e.message)
       MetricsMonitor.logger.error(e.backtrace.join("\n"))

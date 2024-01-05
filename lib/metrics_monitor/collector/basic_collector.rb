@@ -6,6 +6,10 @@ module MetricsMonitor
       PS_PATTERN = /\A\s*(?<pid>\d+)\s+(?<cpu>\d+\.\d)\s+(?<mem>\d+\.\d)\s+(?<rss>\d+)\s+(?<vsz>\d+)\s+(?<command>.+)\s*\z/
       PS_OPTION = "pid,%cpu,%mem,rss,vsz,command"
 
+      def self.default_options
+        { enabled: true, interval: 10_000 }
+      end
+
       def meta_data
         {
           title: "Basic",
@@ -30,7 +34,7 @@ module MetricsMonitor
       def data
         output, error, status = Open3.capture3("ps", "-p", Process.pid.to_s, "-o", PS_OPTION)
 
-        if status.success?
+        if status&.success?
           output.each_line do |line|
             match = PS_PATTERN.match(line)
             next unless match

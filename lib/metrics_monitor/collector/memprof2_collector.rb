@@ -6,8 +6,9 @@ end
 module MetricsMonitor
   module Collector
     class Memprof2Collector < CollectorBase
+
       def self.default_options
-        { enabled: false }
+        { enabled: false, interval: 60_000 }
       end
 
       def initialize
