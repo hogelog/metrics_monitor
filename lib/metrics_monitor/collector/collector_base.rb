@@ -57,6 +57,10 @@ module MetricsMonitor
 
       def collect_data
         { ts: Time.now.to_f, data: data }
+      rescue MetricsMonitor::Error => e
+        MetricsMonitor.logger.error(e.message)
+        MetricsMonitor.logger.error(e.backtrace.join("\n"))
+        { error: e.message }
       end
     end
   end
