@@ -25,7 +25,7 @@ module MetricsMonitor
         ObjectSpace.each_object(Class).each do |klass|
           next if options[:ignore_classes].include?(klass)
           next unless klass.respond_to?(:name)
-          next unless klass.method(:name).parameters.empty?
+          next unless klass.method(:name).arity == 0
           next unless klass.name
           size = ObjectSpace.memsize_of_all(klass)
           next if size <= options[:memsize_threshold]
