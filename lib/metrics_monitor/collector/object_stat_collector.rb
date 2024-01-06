@@ -5,7 +5,7 @@ module MetricsMonitor
     class ObjectStatCollector < CollectorBase
 
       def self.default_options
-        { enabled: true, interval: 120_000 }
+        { enabled: true, interval: 120_000, ignore_classes: [], memsize_threshold: 0 }
       end
 
       def meta_data
@@ -23,11 +23,12 @@ module MetricsMonitor
       def data
         stat = []
         ObjectSpace.each_object(Class).each do |klass|
+          next if options[:ignore_classes].include?(klass)
           next unless klass.respond_to?(:name)
           next unless klass.method(:name).parameters.empty?
           next unless klass.name
           size = ObjectSpace.memsize_of_all(klass)
-          next if size == 0
+          next if size <= options[:memsize_threshold]
           stat << [klass.name, size]
         end
         stat.sort_by!{|_name, size| -size }

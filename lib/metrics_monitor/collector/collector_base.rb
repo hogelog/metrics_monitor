@@ -24,7 +24,7 @@ module MetricsMonitor
         @metrics = []
         @metrics_mutex = Mutex.new
         @thread = Thread.new do
-          MetricsMonitor.logger.info "#{self.class.name}: start"
+          MetricsMonitor.logger.info "start #{self.class.name} #{@options.inspect}"
           while true
             data = collect_data
             @metrics_mutex.synchronize do
