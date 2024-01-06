@@ -10,9 +10,14 @@ MetricsMonitor::Collector::ObjectStatCollector.configure do |options|
   options[:memsize_threshold] = 5000
 end
 
+MetricsMonitor::Collector::ObjectTraceCollector.configure do |options|
+  options[:enabled] = true
+end
+
 MetricsMonitor.configure do |config|
   config.collectors << MetricsMonitor::Collector::GcStatCollector
   config.collectors << MetricsMonitor::Collector::ObjectStatCollector
+  config.collectors << MetricsMonitor::Collector::ObjectTraceCollector
 end
 
 class RackApp

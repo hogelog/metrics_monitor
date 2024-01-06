@@ -27,6 +27,4 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "rack"
   spec.add_development_dependency "unicorn"
-  spec.add_development_dependency "memprof2"
-
 end
