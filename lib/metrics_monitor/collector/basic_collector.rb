@@ -7,7 +7,7 @@ module MetricsMonitor
       PS_OPTION = "pid,%cpu,%mem,rss,vsz,command"
 
       def self.default_options
-        { enabled: true, interval: 10_000 }
+        { enabled: true, interval: 30_000 }
       end
 
       def meta_data

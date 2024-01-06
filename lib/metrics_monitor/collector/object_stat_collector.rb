@@ -5,7 +5,7 @@ module MetricsMonitor
     class ObjectStatCollector < CollectorBase
 
       def self.default_options
-        { enabled: true, interval: 120_000, ignore_classes: [], memsize_threshold: 0 }
+        { enabled: true, interval: 240_000, ignore_classes: [], memsize_threshold: 0 }
       end
 
       def meta_data

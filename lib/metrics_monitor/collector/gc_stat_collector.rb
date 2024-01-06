@@ -3,7 +3,7 @@ module MetricsMonitor
     class GcStatCollector < CollectorBase
 
       def self.default_options
-        { enabled: true, interval: 10_000 }
+        { enabled: true, interval: 30_000 }
       end
 
       def meta_data
