@@ -9,6 +9,8 @@ import Plot from 'react-plotly.js';
 const TIMEOUT = 500;
 const INTERVAL = 10_000;
 
+const ROOT_MARGIN = 20;
+
 function TextMonitor(props: { format: MonitorFormat, data: CollectorData}) {
     let pids = Object.keys(props.data);
 
@@ -61,6 +63,7 @@ function TableMonitor(props: { format: MonitorFormat, data: CollectorData }) {
 
 function formatChartData(format: MonitorFormat, data: CollectorData) {
     let fill : "tozeroy" | "none";
+
     switch (format.mode) {
         case "area":
             fill = "tozeroy";
@@ -72,32 +75,89 @@ function formatChartData(format: MonitorFormat, data: CollectorData) {
     let plotData = [] as Plotly.Data[];
     Object.keys(data).forEach((pid) => {
         let procData = data[pid];
-        plotData.push({
+        let value = procData[format.key] as number[];
+        if (!Array.isArray(value)) {
+            value = [value];
+        }
+        let datum : Plotly.Data = {
             name: pid,
             x: procData["date"],
-            y: procData[format.key],
+            y: value,
             type: "scatter",
             mode: "lines+markers",
             fill: fill,
+        };
+        plotData.push(datum);
+    });
+    return plotData;
+}
+
+function formatBarChartData(format: MonitorFormat, procData: CollectorPidData) {
+    // @ts-ignore
+    let value  = procData[format.key] as [string, number][][];
+
+    let plotData = [] as Plotly.Data[];
+    let names = value[value.length-1].map((v) => v[0]);
+    let nameSizes = {} as { [name: string]: number[] };
+    value.forEach((barData, i) => {
+        barData.forEach((name_value) => {
+            nameSizes[name_value[0]] ||= [];
+            nameSizes[name_value[0]][i] = name_value[1];
         });
+    });
+    names.forEach((name) => {
+        let sizes = nameSizes[name];
+        let datum : Plotly.Data = {
+            name: name,
+            x: procData["date"],
+            y: sizes,
+            type: "bar",
+        };
+        if (format.hovertemplate) {
+            datum.hovertemplate = format.hovertemplate;
+        }
+        plotData.push(datum);
     });
     return plotData;
 }
 
 function ChartMonitor(props: { format: MonitorFormat, data: CollectorData, dataRevision: number }) {
+    let width = props.format.size == "full" ? window.innerWidth - ROOT_MARGIN : 400;
+    let layout : Partial<Plotly.Layout> = {
+        width: width,
+        height: 400,
+        yaxis: {
+            zeroline: true,
+        },
+        datarevision: props.dataRevision,
+    };
+    if (props.format.mode == "stacked_bar") {
+        layout.barmode = "stack";
+    }
+
+    if (props.format.mode == "stacked_bar") {
+        let pids = Object.keys(props.data);
+        let plots = [] as any[];
+        pids.forEach((pid : string) => {
+            let plotLayout = Object.assign({ title: `${props.format.title} (PID ${pid})` }, layout);
+            let targetData = props.data[pid];
+            plots.push(
+                <Plot
+                    key={ `${props.format.key}-${pid}` }
+                    data={ formatBarChartData(props.format, targetData) }
+                    layout={ plotLayout }
+                    config={ { responsive: true } }
+                />
+            );
+        });
+        return plots;
+    }
+    layout.title = props.format.title;
     return (
         <Plot
             key={ props.format.key }
             data={ formatChartData(props.format, props.data) }
-            layout={{
-                width: 400,
-                height: 300,
-                title: props.format["title"],
-                yaxis: {
-                    zeroline: true,
-                },
-                datarevision: props.dataRevision,
-            }}
+            layout={ layout }
         />
     );
 }
@@ -138,21 +198,18 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
                         if (monitorChartData.error) {
                             return;
                         }
-                        let procChartData: { [p: string]: ((number | Date)[] | (number | Date)) } = data[pid] = (data[pid] || {});
+                        let procChartData: { [p: string]: (CollectorDataValue[] | CollectorDataValue) } = data[pid] = (data[pid] || {});
                         procChartData["date"] = procChartData["date"] || [];
-                        // @ts-ignore
-                        (procChartData["date"] as (number | Date)[]).push(new Date(monitorChartData.ts * 1000));
+                        (procChartData["date"] as CollectorDataValue[]).push(new Date(monitorChartData.ts * 1000));
 
                         let collectorDataFormats: DataFormat[] = props.metaData.data;
                         Object.keys(monitorChartData.data).forEach((metricsName: string) => {
                             // @ts-ignore
                             let metricsFormat = collectorDataFormats[metricsName];
                             if (metricsFormat.mode == "overwrite") {
-                                // @ts-ignore
                                 procChartData[metricsName] = monitorChartData.data[metricsName];
                             } else {
                                 procChartData[metricsName] = procChartData[metricsName] || [];
-                                // @ts-ignore
                                 (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
                             }
                         });

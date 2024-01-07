@@ -5,17 +5,17 @@ module MetricsMonitor
     class ObjectTraceCollector < CollectorBase
 
       def self.default_options
-        { enabled: false, interval: 60_000 }
+        { enabled: true, interval: 60_000 }
       end
 
       def meta_data
         {
           title: "Object Trace",
           monitors: [
-            { key: :report, title: "Allocation sourcefiles (live objects)", type: :text },
+            { key: :report, title: "Allocation sourcefiles (live objects)", type: :chart, mode: :stacked_bar, size: :full, hovertemplate: "%{y} bytes" }
           ],
           data: {
-            report: { mode: "overwrite" },
+            report: { mode: "append" },
           },
         }
       end
@@ -40,9 +40,9 @@ module MetricsMonitor
           results[location] += memsize
         end
 
-        report = results.to_a.sort_by{|_loc, size| -size }.map{|loc, size| "#{loc}\t#{size}" }.join("\n")
+        report = results.to_a.sort_by{|_loc, size| -size }.map{|loc, size| [loc, size] }
         {
-          report: report,
+          report:,
         }
       ensure
         ObjectSpace.trace_object_allocations_start

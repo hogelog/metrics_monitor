@@ -1,7 +1,12 @@
+type CollectorDataValue = number | Date | [string, number];
+
+interface CollectorPidData {
+    date: Date[];
+    [key: string]: CollectorDataValue[];
+}
+
 interface CollectorData {
-    [pid: string]: {
-        [key: string]: (number | Date)[]
-    }
+    [pid: string]: CollectorPidData;
 }
 
 interface CollectorMetaData {
@@ -10,13 +15,16 @@ interface CollectorMetaData {
     data: DataFormat[];
     key: string;
     options: CollectorOptions;
+    layout: "default" | "large";
 }
 
 interface MonitorFormat {
     key: string;
     title: string;
     type: "chart" | "table" | "text";
-    mode: "line" | "area";
+    mode: "line" | "area" | "stacked_bar";
+    size: "medium" | "full";
+    hovertemplate?: string;
 }
 
 interface DataFormat {

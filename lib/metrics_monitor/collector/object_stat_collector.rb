@@ -12,10 +12,10 @@ module MetricsMonitor
         {
           title: "Object Stat",
           monitors: [
-            { key: :stat, title: "Object sizes", type: :text },
+            { key: :stat, title: "Object sizes", type: :chart, mode: :stacked_bar, size: :full, hovertemplate: "%{y} bytes" },
           ],
           data: {
-            stat: { mode: "overwrite" },
+            stat: { mode: "append" },
           },
         }
       end
@@ -34,7 +34,7 @@ module MetricsMonitor
         stat.sort_by!{|_name, size| -size }
 
         {
-          stat: stat.map{|name, size| "#{name}\t#{size}" }.join("\n"),
+          stat:,
         }
       end
     end
