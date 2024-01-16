@@ -58,6 +58,9 @@ devDependencies:
   vite:
     specifier: ^5.0.11
     version: 5.0.11(@types/node@20.11.3)(sass@1.69.7)
+  vite-plugin-singlefile:
+    specifier: ^1.0.0
+    version: 1.0.0(rollup@4.9.5)(vite@5.0.11)
 
 packages:
 
@@ -2048,6 +2051,14 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
+  /micromatch@4.0.5:
+    resolution: {integrity: sha512-DMy+ERcEW2q8Z2Po+WNXuw3c5YaUSFjAO5GsJqfEl7UjvtIuFKO6ZrKvcItdy98dwFI2N1tg3zNIdKaQT+aNdA==}
+    engines: {node: '>=8.6'}
+    dependencies:
+      braces: 3.0.2
+      picomatch: 2.3.1
+    dev: true
+
   /minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
     dev: false
@@ -2878,6 +2889,18 @@ packages:
   /util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: false
+
+  /vite-plugin-singlefile@1.0.0(rollup@4.9.5)(vite@5.0.11):
+    resolution: {integrity: sha512-iVAxl0t7gndQrznI4kI14hqAGxhVL7FQndeTdvTIH5/CbwpR2asgD3XSTsd7iWC83YTCmwAmsHIQvKdIdnHu7w==}
+    engines: {node: '>18.0.0'}
+    peerDependencies:
+      rollup: ^4.9.5
+      vite: ^5.0.11
+    dependencies:
+      micromatch: 4.0.5
+      rollup: 4.9.5
+      vite: 5.0.11(@types/node@20.11.3)(sass@1.69.7)
+    dev: true
 
   /vite@5.0.11(@types/node@20.11.3)(sass@1.69.7):
     resolution: {integrity: sha512-XBMnDjZcNAw/G1gEiskiM1v6yzM4GE5aMGvhWTlHAYYhxb7S3/V1s3m2LDHa8Vh6yIWYYB0iJwsEaS523c4oYA==}
