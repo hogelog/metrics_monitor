@@ -173,61 +173,66 @@ function Monitor(props: { format: MonitorFormat, data: CollectorData, dataRevisi
     }
 }
 
-function Collector(props: { collectorName: string; metaData: CollectorMetaData; options: CollectorOptions; monitorHost: string; debug: boolean; }) {
+function Collector(props: { collectorName: string; metaData: CollectorMetaData; options: CollectorOptions; monitorHost: string; debug: boolean; onDataChanged: (data: CollectorData) => void; snapshotdata?: Snapshotdata }) {
     const [displayDebug] = useState(props.debug ? "block" : "none");
     const [enabled, setEnabled] = useState(!!props.options.enabled);
-    const [data, setData] = useState({} as CollectorData);
     const [dataRevision, setDataRevision] = useState(0);
     const [log, setLog] = useState("");
+
+    let initData = props.snapshotdata ? props.snapshotdata.data[props.collectorName] || {} : {} as CollectorData;
+    const [data, setData] = useState(initData);
     let url = `${props.monitorHost}/monitor/${props.collectorName}`;
 
-    useEffect(() => {
-        let newIntervalId = window.setInterval(()=>{
-            if (!enabled) {
-                return;
-            }
-            fetch(url, {
-                mode: "cors",
-                signal: AbortSignal.timeout(TIMEOUT),
-            }).then(res => {
-                return res.json();
-            }).then((monitorData_) => {
-                let monitorData = monitorData_ as MonitorData;
-                Object.keys(monitorData).forEach((pid) => {
-                    monitorData[pid].forEach((monitorChartData) => {
-                        if (monitorChartData.error) {
-                            return;
-                        }
-                        let procChartData: { [p: string]: (CollectorDataValue[] | CollectorDataValue) } = data[pid] = (data[pid] || {});
-                        procChartData["date"] = procChartData["date"] || [];
-                        (procChartData["date"] as CollectorDataValue[]).push(new Date(monitorChartData.ts * 1000));
-
-                        let collectorDataFormats: DataFormat[] = props.metaData.data;
-                        Object.keys(monitorChartData.data).forEach((metricsName: string) => {
-                            // @ts-ignore
-                            let metricsFormat = collectorDataFormats[metricsName];
-                            if (metricsFormat.mode == "overwrite") {
-                                procChartData[metricsName] = monitorChartData.data[metricsName];
-                            } else {
-                                procChartData[metricsName] = procChartData[metricsName] || [];
-                                (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
+    if (!props.snapshotdata) {
+        useEffect(() => {
+            let newIntervalId = window.setInterval(()=>{
+                if (!enabled) {
+                    return;
+                }
+                fetch(url, {
+                    mode: "cors",
+                    signal: AbortSignal.timeout(TIMEOUT),
+                }).then(res => {
+                    return res.json();
+                }).then((monitorData_) => {
+                    let monitorData = monitorData_ as MonitorData;
+                    Object.keys(monitorData).forEach((pid) => {
+                        monitorData[pid].forEach((monitorChartData) => {
+                            if (monitorChartData.error) {
+                                return;
                             }
+                            let procChartData: { [p: string]: (CollectorDataValue[] | CollectorDataValue) } = data[pid] = (data[pid] || {});
+                            procChartData["date"] = procChartData["date"] || [];
+                            (procChartData["date"] as CollectorDataValue[]).push(new Date(monitorChartData.ts * 1000));
+
+                            let collectorDataFormats: DataFormat[] = props.metaData.data;
+                            Object.keys(monitorChartData.data).forEach((metricsName: string) => {
+                                // @ts-ignore
+                                let metricsFormat = collectorDataFormats[metricsName];
+                                if (metricsFormat.mode == "overwrite") {
+                                    procChartData[metricsName] = monitorChartData.data[metricsName];
+                                } else {
+                                    procChartData[metricsName] = procChartData[metricsName] || [];
+                                    (procChartData[metricsName] as (number | Date)[]).push(monitorChartData.data[metricsName]);
+                                }
+                            });
                         });
                     });
+
+                    setData(data);
+                    setDataRevision(new Date().getTime());
+                    props.onDataChanged(data);
+                    if (props.debug) {
+                        setLog(log + JSON.stringify(monitorData, null, 4));
+                    }
                 });
+            }, INTERVAL);
 
-                setData(data);
-                setDataRevision(new Date().getTime());
-                if (props.debug) {
-                    setLog(log + JSON.stringify(monitorData, null, 4));
-                }
-            });
-        }, INTERVAL);
-
-        return () => {
-            clearTimeout(newIntervalId);
-        };
-    }, [enabled]);
+            return () => {
+                clearTimeout(newIntervalId);
+            };
+        }, [enabled]);
+    }
 
   let onSwitchChange = (_: React.FormEvent<HTMLInputElement>) => {
     setEnabled(!enabled);
@@ -236,7 +241,7 @@ function Collector(props: { collectorName: string; metaData: CollectorMetaData; 
       <div>
           <h2 className={ Classes.HEADING }>
               {props.metaData.title}
-              <Switch checked={ enabled } onChange={ onSwitchChange } />
+              { !props.snapshotdata ? <Switch checked={ enabled } onChange={ onSwitchChange } /> : "" }
           </h2>
           { props.metaData.monitors.map((format, i) => <Monitor key={`collector-monitor-${i}`} format={format} data={data} dataRevision={dataRevision} />) }
 

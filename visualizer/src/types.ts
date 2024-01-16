@@ -53,3 +53,9 @@ interface CollectorOptions {
 interface MonitorOptions {
     [key: string]: CollectorOptions;
 }
+
+interface Snapshotdata {
+    metaData: { [key: string]: CollectorMetaData };
+    monitorOptions: MonitorOptions;
+    data: { [key: string]: CollectorData };
+}
