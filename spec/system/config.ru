@@ -6,6 +6,7 @@ end
 
 MetricsMonitor::Collector::ObjectStatCollector.configure do |options|
   options[:interval] = 5_000
+  options[:target_classes] = [Hash, String, Array]
   options[:ignore_classes] = [BasicObject, Object, Module, Class]
   options[:memsize_threshold] = 5000
 end
@@ -13,6 +14,7 @@ end
 MetricsMonitor::Collector::ObjectTraceCollector.configure do |options|
   options[:enabled] = true
   options[:interval] = 10_000
+  options[:target_classes] = [Hash, String, Array]
 end
 
 MetricsMonitor.configure do |config|

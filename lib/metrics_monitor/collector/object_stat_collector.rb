@@ -5,7 +5,7 @@ module MetricsMonitor
     class ObjectStatCollector < CollectorBase
 
       def self.default_options
-        { enabled: true, interval: 240_000, ignore_classes: [], memsize_threshold: 0 }
+        { enabled: true, interval: 240_000, target_classes: nil, ignore_classes: [], memsize_threshold: 0 }
       end
 
       def meta_data
@@ -22,7 +22,8 @@ module MetricsMonitor
 
       def data
         stat = []
-        ObjectSpace.each_object(Class).each do |klass|
+        classes = options[:target_classes] || ObjectSpace.each_object(Class)
+        classes.each do |klass|
           next if options[:ignore_classes].include?(klass)
           next unless klass.respond_to?(:name)
           next unless klass.method(:name).arity == 0

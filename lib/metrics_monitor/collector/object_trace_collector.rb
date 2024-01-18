@@ -5,7 +5,7 @@ module MetricsMonitor
     class ObjectTraceCollector < CollectorBase
 
       def self.default_options
-        { enabled: true, interval: 60_000 }
+        { enabled: true, interval: 60_000, target_classes: nil, ignore_classes: [] }
       end
 
       def meta_data
@@ -29,15 +29,19 @@ module MetricsMonitor
         ObjectSpace.trace_object_allocations_stop
 
         results = {}
-        ObjectSpace.each_object do |o|
-          file = ObjectSpace.allocation_sourcefile(o)
-          next unless file
-          line = ObjectSpace.allocation_sourceline(o)
-          memsize = ObjectSpace.memsize_of(o)
-          klass_name = o.class rescue "???"
-          location = "#{file}:#{line}:#{klass_name}"
-          results[location] ||= 0
-          results[location] += memsize
+        classes = options[:target_classes] || ObjectSpace.each_object(Class)
+        classes.each do |klass|
+          next if options[:ignore_classes].include?(klass)
+          ObjectSpace.each_object(klass) do |o|
+            file = ObjectSpace.allocation_sourcefile(o)
+            next unless file
+            line = ObjectSpace.allocation_sourceline(o)
+            memsize = ObjectSpace.memsize_of(o)
+            klass_name = o.class rescue "???"
+            location = "#{file}:#{line}:#{klass_name}"
+            results[location] ||= 0
+            results[location] += memsize
+          end
         end
 
         report = results.to_a.sort_by{|_loc, size| -size }.map{|loc, size| [loc, size] }
