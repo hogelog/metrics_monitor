@@ -1,38 +1,129 @@
 # MetricsMonitor
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/metrics_monitor`. To experiment with that code, run `bin/console` for an interactive prompt.
+MetricsMonitor is dynamic monitoring tool for ruby application.
 
-TODO: Delete this and the text above, and describe your gem
+## Features
+- Monitor multi process ruby application
+- Monitor basic metrics by builtin collector
+- Monitor custom metrics
+- Save monitoring result to single html file
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'metrics_monitor'
+gem "metrics_monitor", require: "metrics_monitor/setup"
 ```
 
-And then execute:
+If you want to customize, add this line to your application's Gemfile:
 
-    $ bundle install
+```ruby
+gem "metrics_monitor"
+```
 
-Or install it yourself as:
+and configure like this:
 
-    $ gem install metrics_monitor
+```ruby
+require_relative "metrics_monitor"
 
-## Usage
+MetricsMonitor::Collector::ObjectStatCollector.configure do |options|
+  options[:interval] = 5_000
+  options[:memsize_threshold] = 5000
+end
 
-TODO: Write usage instructions here
+MetricsMonitor.configure do |config|
+  config.collectors << MetricsMonitor::Collector::ObjectStatCollector
+  config.exclude_main_process = true
+end
+```
 
-## Development
+## Configuration
+### MetricsMonitor config
+- `collectors`: Array of collector class
+- `exclude_main_process`: Exclude main process from monitoring (when using multi process application)
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+### Collector config
+- `enabled`: Enable or disable collector when starting
+- `interval`: Interval of collecting metrics (ms)
+- other options: Depends on collector
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+### Multi process application
+MetricsMonitor can monitor multi process application.
+
+When using multi process application, you should start MetricsMonitor in each processes.
+
+If you use `unicorn`, you can start MetricsMonitor like this:
+
+```ruby
+after_fork do |_server, worker|
+  MetricsMonitor.monitor.watch(worker.nr)
+end
+```
+
+You could set `exclude_main_process` to `true` in MetricsMonitor config to exclude main process from monitoring.
+
+## Collectors
+### BasicCollector
+Basic metrics collector like cpu, memory and etc.
+
+![](docs/basic-collector.png)
+
+
+### GcStatCollector
+Garbage collection statistics collector.
+
+![](docs/gc-stat-collector.png)
+
+### ObjectStatCollector
+Object statistics collector.
+
+![](docs/object-stat-collector.png)
+
+### ObjectTraceCollector
+Object tracing data collector.
+
+![](docs/object-trace-collector.png)
+
+### Custom collector
+You can create custom collector by referring to [lib/metrics_monitor/collector](lib/metrics_monitor/collector).
+
+Below is an example of a custom collector.
+
+
+```ruby
+class RandomCollector < MetricsMonitor::Collector::CollectorBase
+  def self.default_options
+    { enabled: true, interval: 5_000 }
+  end
+
+  def meta_data
+    {
+      title: "Random",
+      monitors: [
+        { key: :random, title: "Random values", type: :chart, mode: :line },
+      ],
+      data: {
+        random: { mode: "append" },
+      },
+    }
+  end
+
+  def data
+    {
+      random: rand,
+    }
+  end
+end
+```
+
+This collector generates random values and displays them in a chart.
+
+![](docs/random-collector.png)
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/metrics_monitor.
+Bug reports and pull requests are welcome on GitHub at https://github.com/hogelog/metrics_monitor.
 
 
 ## License
