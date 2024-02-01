@@ -4,6 +4,17 @@ import { Button, Card, HotkeysProvider, Spinner, SpinnerSize } from "@blueprintj
 
 import Collector from './Collector';
 
+function getTimestamp() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    const second = String(date.getSeconds()).padStart(2, "0");
+    return `${year}${month}${day}-${hour}${minute}${second}`;
+}
+
 function saveSnapshot(bodyHtml: string, metaData: { [key: string]: CollectorMetaData }, monitorOptions: MonitorOptions, collectorData: { [key: string]: CollectorData }) {
     let snapshotdata: Snapshotdata = {
         metaData: metaData,
@@ -17,7 +28,7 @@ function saveSnapshot(bodyHtml: string, metaData: { [key: string]: CollectorMeta
     let element = document.createElement("a");
     let file = new Blob([html], { type: "text/html" });
     element.href = URL.createObjectURL(file);
-    element.download = "index.html";
+    element.download = `metricsmonitor-${getTimestamp()}.html`;
     document.body.appendChild(element);
     element.click();
     window.URL.revokeObjectURL(element.href);
