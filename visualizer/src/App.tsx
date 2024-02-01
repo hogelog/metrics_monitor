@@ -77,7 +77,7 @@ function App(props: { monitorHost: string; debug: boolean; bodyHtml: string; sna
                     Metrics Monitor
                     {
                         !props.snapshotdata ?
-                        <Button icon="saved" onClick={ () => { saveSnapshot(props.bodyHtml, metaData, monitorOptions, collectorData) } }>Save</Button> :
+                        <Button onClick={ () => { saveSnapshot(props.bodyHtml, metaData, monitorOptions, collectorData) } }>📥 Save</Button> :
                         ""
                     }
                 </h1>

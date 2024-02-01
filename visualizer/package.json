@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@blueprintjs/core": "^5.8.2",
-    "@blueprintjs/icons": "^5.7.0",
     "@blueprintjs/table": "^5.0.23",
     "normalize.css": "^8.0.1",
     "query-string": "^8.1.0",
